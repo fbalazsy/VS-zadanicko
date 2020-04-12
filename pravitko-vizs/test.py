@@ -64,13 +64,15 @@ def rotateImage(image, angle):
 cap = cv2.VideoCapture('movie1.mov') # 0- Primary camera ,1- External camera
 #cap = cv2.VideoCapture(0) # 0- Primary camera ,1- External camera
 
+topLine = [410, 250, 390, 252]
+bottomLine = [410, 250, 390, 252]
+
 # Video Loop - Real time processing 
 
 while(1):
     
     # Read the image
     ret, frame = cap.read()
-    hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 
     #Rotujem video
     #rotated_frame = rotateImage(frame, 38)
@@ -78,27 +80,46 @@ while(1):
 
     #Masking the part of the image
     mask = np.zeros(rotated_frame.shape[0:2], dtype=np.uint8)
-    print(rotated_frame.shape[0:2])
     #Maska na rotovane 
     #points = np.array([[[0,420],[906,420],[906,470],[0,470]]])
     points = np.array([[[0,0],[200,0],[800,450],[800,532],[0,532]]])
     #Maska na original
     cv2.drawContours(mask, [points], -1, (255, 255, 255), -1, cv2.LINE_AA)
     img = cv2.bitwise_and(rotated_frame,rotated_frame,mask = mask)
-
+    cv2.imshow('Video',img)
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    edges = cv2.Canny(gray, 75, 150)
 
-    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 30, maxLineGap=250)
+    edges = cv2.Canny(gray,70, 150)
+    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 35, maxLineGap=90)
+
     if lines is not None:
         for line in lines:
             x1, y1, x2, y2 = line[0]
-            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 3)
+            uhol = np.rad2deg(np.arctan2((y2-y1),(x2-x1)))
+            if uhol < -45 and uhol > -65:
+                cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 1)
+                if x1 < topLine[0] and x2 < topLine[3]:
+                    topLine[0] = x1
+                    topLine[1] = y1
+                    topLine[2] = x2
+                    topLine[3] = y2
+                    print('Nova top')
+                if x1 > bottomLine[0] and x2 > bottomLine[3]:
+                    bottomLine[0] = x1
+                    bottomLine[1] = y1
+                    bottomLine[2] = x2
+                    bottomLine[3] = y2
+                    print('Nova bottom')
+            else:
+                cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 1)
 
+    cv2.line(img, (topLine[0], topLine[1]), (topLine[2], topLine[3]), (255, 0, 0), 3)
+    cv2.line(img, (bottomLine[0], bottomLine[1]), (bottomLine[2], bottomLine[3]), (255, 0, 0), 3)
     # Show the image
-    cv2.imshow('Rotated video',rotated_frame)
-    cv2.imshow('Cropped image',img)
+
+    cv2.imshow('Highlight',img)
+    cv2.imshow('Edges',edges)
     
     #cv2.imshow('mask',mask)
     #cv2.imshow('res',res)
