@@ -1,5 +1,21 @@
 # Druhá úloha - Houghova transformácia
 
+## Spustenie programu
+
+Zadanie bolo vypracovane v jazyku Python, v3, takže tento je potrebné mať. Boli použité knižnice:
+
+**numpy** a **matplotlib**, takže pred spustením je potrebné ich nainštalovať:
+
+```
+pip install numpy matplotlib
+```
+Spustenie, napr.:
+```
+#meno skriptu <stupny_obraz> <prah_pre_vyber_ciar>
+
+hough_transform.py test_images/sudoku.jpg 150
+```
+
 ## Vstupné obrázky
 Pre testovanie sme použili tri rôzne obrázky, ktoré sú v priečinku `test_images`,
 - jednoducký, s ľahko identifikovateľnými hranami
@@ -40,41 +56,40 @@ Najvýraznejší vplyv malo vhodne zvolené prahovanie, a to také, v ktorom sa 
 
 ## Aplikovanie Hougovej transformacie
 
-Po pripravení obrázkov sme mohli pristúpiť k samotnej **Houghovej transformácií**
+Po pripravení obrázkov sme mohli pristúpiť k samotnej **Houghovej transformácií**, pomocou ktorej sme detekovali čiary, už relatívne jednoduchým postupom, pri ktorom využívame, že priamky môžme reprezentovať nasledovnou formulou:
+
+```
+ro = x * cos(theta) + y * sin(theta)
+```
+kde **x** a **y** sú koordináty na obrázku.
+Tým pádom vieme akúkoľvek priamku reprezentovať ako kombináciu dvoch parametrov **theta** a **ro**.
+Vytvorili sme z nich dvojrozmerné pole, kde na x-ovej osi sme naniesli hodnoty **theta**, s možnými hodnotami 0, 1, ..., 180
+a na y-ovú os sme naniesli hodnoty **ro**, ktorého rozsah hodnôt závisí od veľkosti vstupného obrazká, 
+keďže to je v podstate vzdialenosť k definovaj priamke od rohu obrázka, (**theta** je uhol, ktorý zviera **ro** s definovanou priamkou).
+
+Keď už máme definovane naše pole rôznych kombinácií **theta** a **ro** vytiahneme si z nášho predspracovaného obrázka hrany s určitou intenzitou.
+(použili sme hodnotu **5**) a do poľa **theta** a **ro** (akumulátora) zvyšujeme hodnoty na miestach, ktoré intenzívnych priamkam (intenzita > 5) odpovedajú
+
+Keď sme už vytvorili akumulátor, ľahko z neho vytiahneho získame hľadané priamky, aplikovaním prahu, ktorý opäť je špecifický pre každý obrázok, 
+Vykreslenie spočíva už len v upravení vyššie definovanej rovnice, do tejto podoby:
+```
+y = (ro - x * cos(theta)) / sin(theta)
+```
 
 Dosiahli sme nasledovné výsledky:
-
+- prah pre výber z akumulátora - **100**
 ![image info](./output_images/Hough_pentagon.png)
 ![image info](./output_images/Pentagon_final.png)
 
 
-
-
+- prah pre výber z akumulátora - **150**
 ![image info](./output_images/Hough_Sudoku.png)
 ![image info](./output_images/Sudoku_final.png)
 
 
-
-
+- prah pre výber z akumulátora - **80**
 ![image info](./output_images/Hough_Window.png)
 ![image info](./output_images/Window_final.png)
-
-
-## Spustenie programu
-
-Zadanie bolo vypracovane v jazyku Python, v3, takže tento je potrebné mať. Boli použité knižnice:
-
-**numpy** a **matplotlib**, takže pred spustením je potrebné ich nainštalovať:
-
-```
-pip install numpy matplotlib
-```
-Spustenie:
-```
-python hough_transform.py
-```
-
-
 
 
 

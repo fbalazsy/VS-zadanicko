@@ -1,7 +1,8 @@
+#!/usr/bin/env python3
 import numpy as np
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-import math
+import math, sys
 
 
 def grayscale(rgb):
@@ -130,11 +131,11 @@ def canny_edge_detector(img, low_threshold, high_threshold):
 
 def hough_transformation(img, width, height, value_threshold=5):
     thety = np.deg2rad(np.arange(-90.0, 90.0, 1))
+    num_thety = len(thety)
+    cos_thety = np.cos(thety)
+    sin_thety = np.sin(thety)
     uhl_dlzka = int(round(math.sqrt(width**2 + height**2)))
     rka = np.linspace(-uhl_dlzka, uhl_dlzka, uhl_dlzka * 2)
-    cos_t = np.cos(thety)
-    sin_t = np.sin(thety)
-    num_thety = len(thety)
     # Inicializacia akumulatora
     accumulator = np.zeros((2 * uhl_dlzka, num_thety))
     edges = img > value_threshold
@@ -144,28 +145,9 @@ def hough_transformation(img, width, height, value_threshold=5):
         x = x_idxs[i]
         y = y_idxs[i]
         for t_idx in range(num_thety):
-            r = uhl_dlzka + int(round(x * cos_t[t_idx] + y * sin_t[t_idx]))
+            r = uhl_dlzka + int(round(x * cos_thety[t_idx] + y * sin_thety[t_idx]))
             accumulator[r, t_idx] += 1
     return accumulator, thety, rka
-
-
-def show_hough_priamka(img, accumulator, thety, rka, save_path=None):
-    fig, ax = plt.subplots(1, 2, figsize=(10, 10))
-    ax[0].imshow(img, cmap=plt.cm.gray)
-    ax[0].set_title('Input image')
-    ax[0].axis('image')
-    ax[1].imshow(
-        accumulator, cmap='jet',
-        extent=[np.rad2deg(thety[-1]), np.rad2deg(thety[0]), rka[-1], rka[0]])
-    ax[1].set_aspect('equal', adjustable='box')
-    ax[1].set_title('Hough transform')
-    ax[1].set_xlabel('Angles (degrees)')
-    ax[1].set_ylabel('Distance (pixels)')
-    ax[1].axis('image')
-    # plt.axis('off')
-    if save_path is not None:
-        plt.savefig(save_path, bbox_inches='tight')
-    plt.show()
 
 def get_hough_lines(accumulator, thety, rka, image_width, threshold=100):
     i, j = np.where(accumulator > threshold)
@@ -183,6 +165,16 @@ def show_image(img, name, save_to_path=None):
     plt.title(name)
     if img.ndim == 2:
         plt.set_cmap('gray')
+    if save_to_path is not None:
+        plt.savefig(save_to_path)
+    plt.show()
+
+def show_image_with_detected_lines(img, name, xvals, yvals, save_to_path=None):
+    plt.imshow(img)
+    plt.title(name)
+    plt.axis('image')
+    for i in range(0, np.shape(xvals)[0]):
+        plt.plot(xvals[i], yvals[i], color='green')
     if save_to_path is not None:
         plt.savefig(save_to_path)
     plt.show()
@@ -207,22 +199,41 @@ def show_detected_lines(img, name, accumulator, acc_i, acc_j, xvals, yvals, save
         plt.savefig(save_to_path, bbox_inches='tight')
     plt.show()
 
-def test_image(path, acc_threshold, output_name, save_to_path=None):
-    img = mpimg.imread(path)
+def test_image(img, acc_threshold, output_name, thres_low, thres_high, save_to_path=None):
     w = img.shape[0]
     h = img.shape[1]
     img_grey = grayscale(img)
-    img_with_edges = canny_edge_detector(img_grey, 0.05, 0.25)
+    img_with_edges = canny_edge_detector(img_grey, thres_low, thres_high)
     accumulator, thety, rka = hough_transformation(img_with_edges, w, h)
     xvals, yvals, acc_i, acc_j = get_hough_lines(accumulator, thety, rka, w, acc_threshold)
     show_detected_lines(img_with_edges, output_name, accumulator, acc_i, acc_j, xvals, yvals, save_to_path)
-
+    return xvals, yvals, img_with_edges
 
 if __name__ == '__main__':
-    pentagon_path = 'test_images/pentagon.jpg'
-    window_path = 'test_images/Window.jpg'
-    sudoku_path = 'test_images/sudoku.jpg'
+    if len(sys.argv) < 3:
+        print('Usage: hough_transform.py <path_to_picture> <hough_transform_threshold>')
+    else:
+        img_path = sys.argv[1]
+        hough_threshold = int(sys.argv[2])
+        img = mpimg.imread(img_path)
+        xlines, ylines, img_with_edges = test_image(img, hough_threshold, 'Hough transform detekcia', 0.02, 0.10, 'Hough_transform_detekcia')
+        show_image(img_with_edges, "Obraz - detekcia hran", "Obr_edges")
+        show_image_with_detected_lines(img, "Vstupny obraz - vysledok", xlines, ylines, 'obr_final')
 
-    #test_image(pentagon_path, 100, 'Pentagon Image', 'Hough_pentagon')
-    #test_image(sudoku_path, 150, 'Sudoku Image', 'Hough_Sudoku')
-    test_image(window_path, 80, 'Window Image', 'Hough_Window')
+
+    ## Nase testovacie scenare
+    #pentagon_img = mpimg.imread('test_images/pentagon.jpg')
+    #window_img = mpimg.imread('test_images/Window.jpg')
+    #sudoku_img = mpimg.imread('test_images/sudoku.jpg')
+
+    #xlines, ylines, img_with_edges = test_image(pentagon_img, 100, 'Pentagon Image', 0.05, 0.75, 'Hough_pentagon')
+    #show_image(img_with_edges, "Pentagon - detekcia hran", "Pentagon_edges")
+    #show_image_with_detected_lines(pentagon_img, "Pentagon - vysledok", xlines, ylines, 'Pentagon_final')
+
+    #xlines, ylines, img_with_edges = test_image(sudoku_img, 150, 'Sudoku Image', 0.02, 0.10, 'Hough_Sudoku')
+    #show_image(img_with_edges, "Sudoku - detekcia hran", "Sudoku_edges")
+    #show_image_with_detected_lines(sudoku_img, "Sudoku - vysledok", xlines, ylines, 'Sudoku_final')
+
+    #xlines, ylines, img_with_edges = test_image(window_img, 80, 'Window Image', 0.05, 0.45, 'Hough_Window')
+    # show_image(img_with_edges, "Window - detekcia hran", "Window_edges")
+    #show_image_with_detected_lines(window_img, "Window - vysledok", xlines, ylines, 'Window_final')

@@ -1,10 +1,12 @@
-1. Uloha - pravitko-vizs
-
+# 1. Uloha - pravitko-vizs
+```
 #Nainstalujeme potrebne baliky
 pip install numpy opencv-python
+```
+```
 #Spustime skript ulohy
 python prod.py
-
+```
 V prvej časti úlohy bolo pre správne meranie vzdialenosti nevyhnutné urobiť kalibráciu skreslenia kamery.
 Počas tvorby meracieho algoritmu sme vystriedali viaceré prístupy ako napríklad detekovať hrany na celom 
 zábere pomocou Houghovej transformácie a počítať šírku z nich. Najviac sa nám však osvedčilo striktne obmedziť 
@@ -13,3 +15,9 @@ treshholdom. Následne si nájdeme kontúry oblastí a vytriedime tie, ktoré sp
 prebieha v oblasti záberu najviac vyhovujúcim podmienkam zadania, to tak že na danom mieste sa látka musí nachádzať 
 vždy po šírke celá(bez počiatočných rožkov). Poloha a natočenie kamery je fixne dané, vzťah medzi skutočnou dĺžkou 
 a počtom pixelov z linearizovaného obrazu sme definovali meraním.
+
+# 2. Uloha - uloha2-hough-transform
+
+Na detekciu hrán sme použili Cannyho detektor a následne sme detekovali hrany s Houghovou transformáciou.
+Bližší popis k úlohe je uvedený v tomto 
+[popise](uloha2-hough-transform/Hougova_transformacia.md).
